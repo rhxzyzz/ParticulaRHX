@@ -1,97 +1,165 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ParticulaRHX - Partículas em Formato de Coração e X</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: linear-gradient(135deg, #1e1e2e 0%, #2d1b4e 100%);
-            font-family: 'Arial', sans-serif;
-            overflow: hidden;
-        }
-
-        .container {
-            position: relative;
-            display: flex;
-            gap: 60px;
-            align-items: center;
-            justify-content: center;
-        }
-
-        canvas {
-            background: rgba(0, 0, 0, 0.1);
-            border-radius: 10px;
-            box-shadow: 0 0 30px rgba(255, 105, 180, 0.3);
-        }
-
-        .info {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            color: #ff69b4;
-            font-size: 14px;
-            z-index: 10;
-        }
-
-        .title {
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: #ff69b4;
-            font-size: 24px;
-            font-weight: bold;
-            text-shadow: 0 0 20px rgba(255, 105, 180, 0.5);
-            z-index: 10;
-        }
-
-        button {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            padding: 10px 20px;
-            background: linear-gradient(135deg, #ff69b4 0%, #ff1493 100%);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-            z-index: 10;
-            transition: transform 0.2s;
-        }
-
-        button:hover {
-            transform: scale(1.05);
-        }
-
-        button:active {
-            transform: scale(0.95);
-        }
-    </style>
+<meta charset="UTF-8">
+<title>Partículas: Coração → Y</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #0a0a12;
+    height: 100%;
+  }
+  canvas {
+    display: block;
+  }
+  #hint {
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(255,255,255,0.5);
+    font-family: sans-serif;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    pointer-events: none;
+  }
+</style>
 </head>
 <body>
-    <div class="title">ParticulaRHX</div>
-    <button onclick="toggleAnimation()">▶ Play</button>
-    
-    <div class="container">
-        <canvas id="canvas"></canvas>
-    </div>
+<canvas id="canvas"></canvas>
+<div id="hint">clique para trocar de forma antes da hora</div>
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+let W, H;
 
-    <div class="info">
-        Clique em Play para iniciar | Partículas: <span id="particleCount">0</span>
-    </div>
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
 
-    <script src="script.js"></script>
+function heartPoints(count, scale) {
+  const pts = [];
+  for (let i = 0; i < count; i++) {
+    const t = Math.random() * Math.PI * 2;
+    const r = Math.sqrt(Math.random());
+    let x = 16 * Math.pow(Math.sin(t), 3);
+    let y = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
+    x *= r;
+    y *= r;
+    pts.push({ x: x * scale, y: -y * scale });
+  }
+  return pts;
+}
+
+function yPoints(count, size) {
+  const pts = [];
+  const thick = size * 0.06;
+  const topCount = Math.floor(count * 0.55);
+  const stemCount = count - topCount;
+
+  for (let i = 0; i < topCount; i++) {
+    const branch = i % 2;
+    const t = Math.random();
+    const thickness = (Math.random() - 0.5) * thick;
+    let x = branch === 0 ? -t * size : t * size;
+    let y = -t * size;
+    const angle = branch === 0 ? Math.PI * 0.75 : Math.PI * 0.25;
+    x += Math.cos(angle) * thickness;
+    y += Math.sin(angle) * thickness;
+    pts.push({ x, y });
+  }
+
+  for (let i = 0; i < stemCount; i++) {
+    const t = Math.random();
+    const thickness = (Math.random() - 0.5) * thick;
+    const x = thickness;
+    const y = t * size;
+    pts.push({ x, y });
+  }
+
+  return pts;
+}
+
+const NUM_PARTICLES = 2200;
+const scaleH = Math.min(W, H) / 34;
+const sizeY = Math.min(W, H) / 3.4;
+
+let heartTargets = heartPoints(NUM_PARTICLES, scaleH);
+let yTargets = yPoints(NUM_PARTICLES, sizeY);
+
+const particles = [];
+for (let i = 0; i < NUM_PARTICLES; i++) {
+  particles.push({
+    x: Math.random() * W,
+    y: Math.random() * H,
+    vx: 0,
+    vy: 0,
+    hue: 340 + Math.random() * 40,
+    hueY: 190 + Math.random() * 60,
+    size: Math.random() * 2 + 1
+  });
+}
+
+let shape = 'heart';
+let lastSwitch = performance.now();
+const HOLD_TIME = 3200;
+
+function currentTargets() {
+  return shape === 'heart' ? heartTargets : yTargets;
+}
+
+function switchShape() {
+  shape = shape === 'heart' ? 'y' : 'heart';
+  lastSwitch = performance.now();
+}
+
+canvas.addEventListener('click', switchShape);
+
+function animate(now) {
+  ctx.fillStyle = 'rgba(10, 10, 18, 0.18)';
+  ctx.fillRect(0, 0, W, H);
+
+  const cx = W / 2;
+  const cy = H / 2;
+  const targets = currentTargets();
+
+  for (let i = 0; i < particles.length; i++) {
+    const p = particles[i];
+    const t = targets[i];
+    const tx = cx + t.x;
+    const ty = cy + t.y;
+
+    const dx = tx - p.x;
+    const dy = ty - p.y;
+
+    p.vx += dx * 0.02;
+    p.vy += dy * 0.02;
+    p.vx *= 0.85;
+    p.vy *= 0.85;
+
+    p.x += p.vx;
+    p.y += p.vy;
+
+    const hue = shape === 'heart' ? p.hue : p.hueY;
+    ctx.beginPath();
+    ctx.fillStyle = `hsla(${hue}, 90%, 65%, 0.9)`;
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  if (now - lastSwitch > HOLD_TIME) {
+    switchShape();
+  }
+
+  requestAnimationFrame(animate);
+}
+
+requestAnimationFrame(animate);
+</script>
 </body>
 </html>
