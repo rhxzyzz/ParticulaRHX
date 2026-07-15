@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParticulaRHX - Partículas em Formato de Coração e X</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1e1e2e 0%, #2d1b4e 100%);
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+        }
+
+        .container {
+            position: relative;
+            display: flex;
+            gap: 60px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        canvas {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(255, 105, 180, 0.3);
+        }
+
+        .info {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            color: #ff69b4;
+            font-size: 14px;
+            z-index: 10;
+        }
+
+        .title {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ff69b4;
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 0 0 20px rgba(255, 105, 180, 0.5);
+            z-index: 10;
+        }
+
+        button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #ff69b4 0%, #ff1493 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            z-index: 10;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body>
+    <div class="title">ParticulaRHX</div>
+    <button onclick="toggleAnimation()">▶ Play</button>
+    
+    <div class="container">
+        <canvas id="canvas"></canvas>
+    </div>
+
+    <div class="info">
+        Clique em Play para iniciar | Partículas: <span id="particleCount">0</span>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
